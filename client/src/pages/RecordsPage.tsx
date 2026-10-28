@@ -12,8 +12,8 @@ export const RecordsPage: React.FC = () => {
     try {
       const data = await fetchItems();
       setItems(data || []);
-    } catch (err: any) {
-      console.error('Failed to load items:', err);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -23,14 +23,12 @@ export const RecordsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-
     try {
       const newItem = await createItem({
-        title: title.trim(),
+        title,
         category,
-        price: parseFloat(price || '0'),
-        description: description.trim() || undefined,
+        price: Number(price || 0),
+        description,
       });
       setItems([newItem, ...items]);
       setTitle('');
