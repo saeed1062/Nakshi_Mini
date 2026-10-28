@@ -65,18 +65,17 @@ npm run test
 File location: `server/prisma/schema.prisma`
 
 ### Master Type Mapping Table
-| Prisma Type | TypeScript Type | HTML Input Tag | On Submit (Simple) | Table Render |
+| Prisma Type | TypeScript Type | HTML Input Tag | On Submit (Automatic) | Table Render |
 | :--- | :--- | :--- | :--- | :--- |
-| `String` | `string` | `<input type="text">` | `val` | `<td>{item.name}</td>` |
-| `Int` | `number` | `<input type="number">` | `Number(val)` | `<td>{item.age}</td>` |
-| `Float` | `number` | `<input type="number" step="0.01">` | `Number(val)` | `<td>{item.gpa}</td>` |
-| `Decimal` | `number \| string` | `<input type="number" step="0.01">` | `Number(val)` | `<td>৳{Number(item.price)}</td>` |
-| `Boolean` | `boolean` | `<input type="checkbox">` | `checked` | `<td>{item.isActive ? "Yes" : "No"}</td>` |
-| `DateTime` (Date) | `string` | `<input type="date">` | `new Date(val)` | `<td>{new Date(item.date).toLocaleDateString()}</td>` |
-| `DateTime` (Full) | `string` | `<input type="datetime-local">` | `new Date(val)` | `<td>{new Date(item.datetime).toLocaleString()}</td>` |
-| `DateTime` (Time) | `string` | `<input type="time">` | `val` | `<td>{item.time}</td>` |
-| `Enum` | `'OPT_A' \| 'OPT_B'` | `<select>` with `<option>` | `val` | `<td>{item.status}</td>` |
-| `String[]` (Array) | `string[]` | `<input type="text">` | `val.split(',')` | `<td>{item.tags?.join(', ')}</td>` |
+| `String` | `string` | `<input name="title">` | Handled by FormData | `<td>{item.title}</td>` |
+| `Int` | `number` | `<input name="age" type="number">` | Handled by FormData | `<td>{item.age}</td>` |
+| `Float` | `number` | `<input name="gpa" type="number" step="0.01">` | Handled by FormData | `<td>{item.gpa}</td>` |
+| `Decimal` | `number \| string` | `<input name="price" type="number" step="0.01">` | Handled by FormData | `<td>৳{Number(item.price)}</td>` |
+| `Boolean` | `boolean` | `<input name="isActive" type="checkbox">` | Handled by FormData | `<td>{item.isActive ? "Yes" : "No"}</td>` |
+| `DateTime` (Date) | `string` | `<input name="date" type="date">` | Handled by FormData | `<td>{new Date(item.date).toLocaleDateString()}</td>` |
+| `DateTime` (Full) | `string` | `<input name="datetime" type="datetime-local">`| Handled by FormData | `<td>{new Date(item.datetime).toLocaleString()}</td>` |
+| `DateTime` (Time) | `string` | `<input name="time" type="time">` | Handled by FormData | `<td>{item.time}</td>` |
+| `Enum` | `'OPT_A' \| 'OPT_B'` | `<select name="status">` | Handled by FormData | `<td>{item.status}</td>` |
 
 ---
 
@@ -115,64 +114,49 @@ npm run prisma:generate
 
 ---
 
-## 📝 3. How to Take Input & Render Every Type
+## 📝 3. Zero-State Form & Table (No `useState` / No `onChange`)
 
-### 1. Text (`String`)
+Instead of writing `useState`, `value`, and `onChange` for every input, use standard native HTML inputs with `name="..."`. 
+
+### The 3-Line Form Submit Handler
+```tsx
+const handleSubmit = async (e: any) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target));
+  await createItem(data);
+  window.location.reload(); // Reloads page & fetches new list
+};
+```
+
+---
+
+### Input & Render Snippets
+
+#### 1. Text (`String`)
+* **Input**: `<input name="name" className="border p-1 w-full rounded" />`
+* **Render**: `<td>{item.name}</td>`
+
+#### 2. Number (`Int`, `Float`, `Decimal`)
+* **Input**: `<input name="price" type="number" step="0.01" className="border p-1 w-full rounded" />`
+* **Render**: `<td>৳{Number(item.price)}</td>`
+
+#### 3. Date / DateTime (`DateTime`)
+* **Input**: `<input name="date" type="date" className="border p-1 w-full rounded" />`
+* **Render**: `<td>{new Date(item.date).toLocaleDateString()}</td>`
+
+#### 4. Checkbox / Boolean (`Boolean`)
+* **Input**: `<label><input name="isActive" type="checkbox" /> Active</label>`
+* **Render**: `<td>{item.isActive ? "Yes" : "No"}</td>`
+
+#### 5. Dropdown / Select / Enum (`enum` or `String`)
 * **Input**:
   ```tsx
-  <input value={name} onChange={(e) => setName(e.target.value)} className="border p-1 w-full rounded" />
-  ```
-* **Render**:
-  ```tsx
-  <td>{item.name}</td>
-  ```
-
-### 2. Number (`Int`, `Float`, `Decimal`)
-* **Input**:
-  ```tsx
-  <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="border p-1 w-full rounded" />
-  ```
-* **Submit**: `price: Number(price)`
-* **Render**:
-  ```tsx
-  <td>৳{Number(item.price)}</td>
-  ```
-
-### 3. Date / DateTime (`DateTime`)
-* **Input**:
-  ```tsx
-  <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border p-1 w-full rounded" />
-  ```
-* **Submit**: `date: new Date(date)`
-* **Render**:
-  ```tsx
-  <td>{new Date(item.date).toLocaleDateString()}</td>
-  ```
-
-### 4. Checkbox / Boolean (`Boolean`)
-* **Input**:
-  ```tsx
-  <label><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Active</label>
-  ```
-* **Submit**: `isActive`
-* **Render**:
-  ```tsx
-  <td>{item.isActive ? "Yes" : "No"}</td>
-  ```
-
-### 5. Dropdown / Select / Enum (`enum` or `String`)
-* **Input**:
-  ```tsx
-  <select value={category} onChange={(e) => setCategory(e.target.value)} className="border p-1 w-full rounded">
+  <select name="category" className="border p-1 w-full rounded">
     <option value="Craft">Craft</option>
     <option value="Textile">Textile</option>
   </select>
   ```
-* **Submit**: `category`
-* **Render**:
-  ```tsx
-  <td>{item.category}</td>
-  ```
+* **Render**: `<td>{item.category}</td>`
 
 ---
 

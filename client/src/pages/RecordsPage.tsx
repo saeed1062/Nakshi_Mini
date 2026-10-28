@@ -3,37 +3,17 @@ import { fetchItems, createItem, deleteItem, Item } from '../api/items';
 
 export const RecordsPage: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Textile');
-  const [price, setPrice] = useState('');
-  const [description, setDescription] = useState('');
-
-  const loadData = async () => {
-    try {
-      const data = await fetchItems();
-      setItems(data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   useEffect(() => {
-    loadData();
+    fetchItems().then((data) => setItems(data || []));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      const newItem = await createItem({
-        title,
-        category,
-        price: Number(price || 0),
-        description,
-      });
-      setItems([newItem, ...items]);
-      setTitle('');
-      setPrice('');
-      setDescription('');
+      const data = Object.fromEntries(new FormData(e.target));
+      await createItem(data);
+      window.location.reload();
     } catch (err: any) {
       alert(err.message || 'Error saving record');
     }
@@ -42,7 +22,7 @@ export const RecordsPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       await deleteItem(id);
-      setItems(items.filter((item) => item.id !== id));
+      window.location.reload();
     } catch (err: any) {
       alert(err.message || 'Error deleting record');
     }
@@ -60,9 +40,8 @@ export const RecordsPage: React.FC = () => {
           <label className="block text-sm">Title</label>
           <input
             id="item-title-input"
+            name="title"
             required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
             className="border p-1 w-full rounded"
           />
         </div>
@@ -71,8 +50,7 @@ export const RecordsPage: React.FC = () => {
           <label className="block text-sm">Category</label>
           <select
             id="item-category-input"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            name="category"
             className="border p-1 w-full rounded"
           >
             <option value="Textile">Textile</option>
@@ -85,9 +63,8 @@ export const RecordsPage: React.FC = () => {
           <label className="block text-sm">Price</label>
           <input
             id="item-price-input"
+            name="price"
             type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
             className="border p-1 w-full rounded"
           />
         </div>
@@ -96,8 +73,7 @@ export const RecordsPage: React.FC = () => {
           <label className="block text-sm">Description</label>
           <input
             id="item-desc-input"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            name="description"
             className="border p-1 w-full rounded"
           />
         </div>
