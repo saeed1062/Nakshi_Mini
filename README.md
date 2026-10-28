@@ -13,7 +13,7 @@ From the root directory:
 ```bash
 npm install
 ```
-*(This automatically installs packages for both root, `server`, and `client` via npm workspaces).*
+*(This automatically installs packages for root, `server`, and `client` via npm workspaces).*
 
 ### Step 2: Ensure Environment File Exists
 Make sure `server/.env` exists. If missing, create `server/.env`:
@@ -64,7 +64,7 @@ npm run test
 
 File location: `server/prisma/schema.prisma`
 
-### Master Type Mapping Table (Zero-Processing)
+### Master Type Mapping Table
 | Prisma Type | TypeScript Type | HTML Input Tag | On Submit (Simple) | Table Render |
 | :--- | :--- | :--- | :--- | :--- |
 | `String` | `string` | `<input type="text">` | `val` | `<td>{item.name}</td>` |
@@ -115,347 +115,108 @@ npm run prisma:generate
 
 ---
 
-## 📝 3. How to Take Input & Render Every Type (Minimal Code)
-
-Direct, standard inputs without any manual trimming or complex validation:
+## 📝 3. How to Take Input & Render Every Type
 
 ### 1. Text (`String`)
-```tsx
-const [name, setName] = useState('');
+* **Input**:
+  ```tsx
+  <input value={name} onChange={(e) => setName(e.target.value)} className="border p-1 w-full rounded" />
+  ```
+* **Render**:
+  ```tsx
+  <td>{item.name}</td>
+  ```
 
-<input
-  value={name}
-  onChange={(e) => setName(e.target.value)}
-  className="border p-1 w-full rounded"
-/>
+### 2. Number (`Int`, `Float`, `Decimal`)
+* **Input**:
+  ```tsx
+  <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="border p-1 w-full rounded" />
+  ```
+* **Submit**: `price: Number(price)`
+* **Render**:
+  ```tsx
+  <td>৳{Number(item.price)}</td>
+  ```
 
-// Table:
-<td>{item.name}</td>
-```
+### 3. Date / DateTime (`DateTime`)
+* **Input**:
+  ```tsx
+  <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border p-1 w-full rounded" />
+  ```
+* **Submit**: `date: new Date(date)`
+* **Render**:
+  ```tsx
+  <td>{new Date(item.date).toLocaleDateString()}</td>
+  ```
 
----
-
-### 2. Number / Int / Float / Decimal (`Int`, `Float`, `Decimal`)
-Use `Number(val)` for any number type:
-```tsx
-const [price, setPrice] = useState('');
-
-<input
-  type="number"
-  step="0.01"
-  value={price}
-  onChange={(e) => setPrice(e.target.value)}
-  className="border p-1 w-full rounded"
-/>
-
-// Submit:
-const payload = { price: Number(price) };
-
-// Table:
-<td>৳{Number(item.price)}</td>
-```
-
----
-
-### 3. Date & Timestamps (`DateTime`)
-```tsx
-const [date, setDate] = useState('');
-
-<input
-  type="date" // or "datetime-local"
-  value={date}
-  onChange={(e) => setDate(e.target.value)}
-  className="border p-1 w-full rounded"
-/>
-
-// Submit:
-const payload = { date: new Date(date) };
-
-// Table:
-<td>{new Date(item.date).toLocaleDateString()}</td>
-```
-
----
-
-### 4. Checkbox (`Boolean`)
-```tsx
-const [isActive, setIsActive] = useState(true);
-
-<label>
-  <input
-    type="checkbox"
-    checked={isActive}
-    onChange={(e) => setIsActive(e.target.checked)}
-  />
-  Active
-</label>
-
-// Submit:
-const payload = { isActive };
-
-// Table:
-<td>{item.isActive ? "Yes" : "No"}</td>
-```
-
----
+### 4. Checkbox / Boolean (`Boolean`)
+* **Input**:
+  ```tsx
+  <label><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Active</label>
+  ```
+* **Submit**: `isActive`
+* **Render**:
+  ```tsx
+  <td>{item.isActive ? "Yes" : "No"}</td>
+  ```
 
 ### 5. Dropdown / Select / Enum (`enum` or `String`)
-```tsx
-const [category, setCategory] = useState('Craft');
-
-<select
-  value={category}
-  onChange={(e) => setCategory(e.target.value)}
-  className="border p-1 w-full rounded"
->
-  <option value="Craft">Craft</option>
-  <option value="Textile">Textile</option>
-  <option value="Pottery">Pottery</option>
-</select>
-
-// Submit:
-const payload = { category };
-
-// Table:
-<td>{item.category}</td>
-```
+* **Input**:
+  ```tsx
+  <select value={category} onChange={(e) => setCategory(e.target.value)} className="border p-1 w-full rounded">
+    <option value="Craft">Craft</option>
+    <option value="Textile">Textile</option>
+  </select>
+  ```
+* **Submit**: `category`
+* **Render**:
+  ```tsx
+  <td>{item.category}</td>
+  ```
 
 ---
 
-## ⏱️ 4. Exam Day 4-Step Checklist (Creating a New Entity)
+## ⏱️ 4. Exam Day 4-Step Checklist (Files to Copy & Edit)
 
-Suppose your teacher assigns `User` with `name`, `email`, `role`, and `salary`:
+When assigned a new entity (e.g. `User`), copy from the existing files:
 
-### 1. Database (Task 1)
-In `server/prisma/schema.prisma`:
-```prisma
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  role      String   @default("Student")
-  salary    Float    @default(0.0)
-  createdAt DateTime @default(now())
-}
-```
-Run:
-```bash
-npm run prisma:push
-npm run prisma:generate
-```
-
----
-
-### 2. Backend API
-1. Create `server/src/services/user.service.ts`:
-```ts
-import prisma from '../config/prisma.js';
-
-export class UserService {
-  static async getUsers() {
-    return prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+### Step 1: Database (Task 1)
+* Add your model in `server/prisma/schema.prisma`:
+  ```prisma
+  model User {
+    id        String   @id @default(uuid())
+    name      String
+    email     String   @unique
+    createdAt DateTime @default(now())
   }
+  ```
+* Push schema & update client:
+  ```bash
+  npm run prisma:push
+  npm run prisma:generate
+  ```
 
-  static async createUser(data: any) {
-    return prisma.user.create({ data });
-  }
+### Step 2: Backend API
+1. **Service**: Copy `server/src/services/item.service.ts` $\rightarrow$ `services/user.service.ts` (replace `prisma.item` with `prisma.user`).
+2. **Routes**: Copy `server/src/routes/item.routes.ts` $\rightarrow$ `routes/user.routes.ts` (call `UserService`).
+3. **Mount Route**: In `server/src/server.ts`, add:
+   ```ts
+   import userRoutes from './routes/user.routes.js';
+   app.use('/api/users', userRoutes);
+   ```
 
-  static async deleteUser(id: string) {
-    return prisma.user.delete({ where: { id } });
-  }
-}
-```
+### Step 3: Frontend Page (Task 2 & 3)
+1. **API**: Copy `client/src/api/items.ts` $\rightarrow$ `api/users.ts` (change endpoint to `/api/users`).
+2. **Page**: Copy `client/src/pages/RecordsPage.tsx` $\rightarrow$ `pages/UserPage.tsx` (change fields & import from `api/users`).
+3. **Route**: In `client/src/App.tsx`, mount `<Route path="/users" element={<UserPage />} />`.
+4. **Nav Link**: In `client/src/components/Navbar.tsx`, add `<NavLink to="/users" className={navLinkClass}>Users</NavLink>`.
 
-2. Create `server/src/routes/user.routes.ts`:
-```ts
-import { Router } from 'express';
-import { UserService } from '../services/user.service.js';
-
-const router = Router();
-
-router.get('/', async (req, res) => {
-  const data = await UserService.getUsers();
-  res.json({ success: true, data });
-});
-
-router.post('/', async (req, res) => {
-  try {
-    const data = await UserService.createUser(req.body);
-    res.status(201).json({ success: true, data });
-  } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
-  }
-});
-
-router.delete('/:id', async (req, res) => {
-  await UserService.deleteUser(req.params.id as string);
-  res.json({ success: true });
-});
-
-export default router;
-```
-
-3. In `server/src/server.ts`:
-```ts
-import userRoutes from './routes/user.routes.js';
-app.use('/api/users', userRoutes);
-```
-
----
-
-### 3. Frontend Page (Task 2 & 3)
-
-1. Create `client/src/api/users.ts`:
-```ts
-export const fetchUsers = async () => {
-  const res = await fetch('/api/users');
-  const json = await res.json();
-  return json.data;
-};
-
-export const createUser = async (data: any) => {
-  const res = await fetch('/api/users', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  const json = await res.json();
-  return json.data;
-};
-
-export const deleteUser = async (id: string) => {
-  await fetch(`/api/users/${id}`, { method: 'DELETE' });
-};
-```
-
-2. Create `client/src/pages/UserPage.tsx` *(copy `RecordsPage.tsx` and change fields)*:
-```tsx
-import React, { useState, useEffect } from 'react';
-import { fetchUsers, createUser, deleteUser } from '../api/users';
-
-export const UserPage = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [salary, setSalary] = useState('');
-
-  useEffect(() => {
-    fetchUsers().then(setUsers);
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newUser = await createUser({ name, email, salary: Number(salary) });
-    setUsers([newUser, ...users]);
-    setName('');
-    setEmail('');
-    setSalary('');
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteUser(id);
-    setUsers(users.filter((u) => u.id !== id));
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Users</h1>
-
-      <form onSubmit={handleSubmit} className="border p-4 mb-6 rounded bg-white">
-        <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className="border p-1 w-full mb-2" />
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-1 w-full mb-2" />
-        <input placeholder="Salary" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} className="border p-1 w-full mb-2" />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-1 rounded">Save User</button>
-      </form>
-
-      <table className="w-full border text-sm">
-        <thead>
-          <tr className="bg-gray-100 border-b">
-            <th className="p-2 text-left">Name</th>
-            <th className="p-2 text-left">Email</th>
-            <th className="p-2 text-left">Salary</th>
-            <th className="p-2 text-left">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-b">
-              <td className="p-2">{u.name}</td>
-              <td className="p-2">{u.email}</td>
-              <td className="p-2">{u.salary}</td>
-              <td className="p-2">
-                <button onClick={() => handleDelete(u.id)} className="text-red-600">Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-```
-
-3. Mount in `client/src/App.tsx`:
-```tsx
-import { UserPage } from './pages/UserPage';
-<Route path="/users" element={<UserPage />} />
-```
-
-4. Add link in `client/src/components/Navbar.tsx`:
-```tsx
-<NavLink to="/users" className={navLinkClass}>Users</NavLink>
-```
-
----
-
-### 4. Tests (Task 4)
-
-1. **Unit Test**: Create `server/tests/unit/user.service.test.ts`:
-```ts
-import { describe, it, expect, vi } from 'vitest';
-import { UserService } from '../../src/services/user.service.js';
-import prisma from '../../src/config/prisma.js';
-
-vi.mock('../../src/config/prisma.js', () => ({
-  default: {
-    user: {
-      findMany: vi.fn(),
-      create: vi.fn(),
-      delete: vi.fn(),
-    },
-  },
-}));
-
-describe('UserService Unit Test', () => {
-  it('should create a user record', async () => {
-    const mockUser = { id: '1', name: 'Rahim', email: 'rahim@test.com' };
-    (prisma.user.create as any).mockResolvedValue(mockUser);
-
-    const result = await UserService.createUser({ name: 'Rahim', email: 'rahim@test.com' });
-    expect(prisma.user.create).toHaveBeenCalledTimes(1);
-    expect(result.name).toBe('Rahim');
-  });
-});
-```
-Run:
-```bash
-npm run test:unit
-```
-
-2. **UI Test**: Create `e2e/user.spec.ts`:
-```ts
-import { test, expect } from '@playwright/test';
-
-test('should render and submit user', async ({ page }) => {
-  await page.goto('/users');
-  await page.fill('input[placeholder="Name"]', 'Test User');
-  await page.fill('input[placeholder="Email"]', `user_${Date.now()}@test.com`);
-  await page.click('button[type="submit"]');
-
-  await expect(page.locator('table')).toContainText('Test User');
-});
-```
-Run:
-```bash
-npm run test:ui
-```
+### Step 4: Tests (Task 4)
+1. **Unit Test**: Copy `server/tests/unit/item.service.test.ts` $\rightarrow$ `user.service.test.ts` and run:
+   ```bash
+   npm run test:unit
+   ```
+2. **UI Test**: Copy `e2e/records.spec.ts` $\rightarrow$ `e2e/user.spec.ts` (change URL to `/users`) and run:
+   ```bash
+   npm run test:ui
+   ```
