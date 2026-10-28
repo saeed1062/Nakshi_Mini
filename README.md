@@ -52,6 +52,9 @@ npm run test:unit
 # UI Tests (Playwright)
 npm run test:ui
 
+# UI Test Headed
+npx playwright test --project="Desktop Chrome" --workers=1 --headed
+
 # Both
 npm run test
 ```
