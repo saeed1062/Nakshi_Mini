@@ -146,6 +146,10 @@ const handleSubmit = async (e: any) => {
 #### 3. Date / DateTime (`DateTime`)
 * **Input**: `<input name="date" type="date" className="border p-1 w-full rounded" />`
 * **Render**: `<td>{new Date(item.date).toLocaleDateString()}</td>`
+* **ISO - Conversion**: `<td>{new Date(item.datetime).toLocaleString()}</td>`const today = new Date().toISOString().slice(0, 10);
+    const nd = new Date();
+    nd.setDate(nd.getDate() + 7);
+    const futureDate = nd.toISOString().slice(0, 10);
 
 #### 4. Checkbox / Boolean (`Boolean`)
 * **Input**: `<label><input name="isActive" type="checkbox" /> Active</label>`
